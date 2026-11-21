@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d0e12">
+<title>FoxDz — لوحة الأدمن</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+<script>if(location.protocol==='file:'){addEventListener('DOMContentLoaded',function(){var d=document.createElement('div');d.className='msg err';d.style.margin='14px';d.textContent='⚠️ راك فاتح الصفحة من الملف مباشرة. لازم تفتحها عبر رابط الموقع (GitHub Pages) أو localhost باش Firebase يخدم.';document.body.insertBefore(d,document.body.firstChild)})}</script>
+<script>document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">')</script>
+</head>
+<body style="padding-bottom:20px">
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span id="logo"></span><div>Fox<b>Dz</b><small>لوحة التحكم</small></div></div>
+    <button id="logout" class="sec sm hide">خروج</button>
+  </div>
+
+  <div id="authBox" class="card">
+    <h2>دخول الأدمن</h2>
+    <label>الإيميل</label><input id="email" type="email">
+    <label>كلمة السر</label><input id="pass" type="password">
+    <div id="authMsg"></div>
+    <button id="authBtn" class="full">دخول</button>
+    <div class="or">أو</div>
+    <button id="gBtn" class="sec full" style="margin-top:8px">🔵 الدخول بحساب Google</button>
+  </div>
+  <div id="denied" class="msg err hide">هذا الحساب ليس أدمن، أو الإيميل غير مؤكد. ادخل بحساب Google.</div>
+
+  <div id="panel" class="hide">
+    <div class="tiles" id="tiles"></div>
+
+    <div class="tabs">
+      <button id="tabO">📦 الطلبات</button>
+      <button id="tabR" class="sec">⭐ الآراء</button>
+      <button id="tabS" class="sec">⚙️ الإعدادات</button>
+    </div>
+
+    <div id="viewO"><div class="chips" id="chips"></div><div id="orders"></div></div>
+
+    <div id="viewR" class="hide"><div id="revs"></div></div>
+
+    <div id="viewS" class="card hide">
+      <h2>الإعدادات</h2>
+      <div class="row">
+        <div><label>سعر الصرف (دج/$)</label><input id="s_rate" type="number" step="0.5"></div>
+        <div><label>العمولة %</label><input id="s_pct" type="number" step="0.5"></div>
+      </div>
+      <div class="row">
+        <div><label>أقل عمولة (دج)</label><input id="s_min" type="number"></div>
+        <div><label>الشحن لكل طلب ($)</label><input id="s_ship" type="number" step="0.1"></div>
+      </div>
+      <label>طريقة الدفع (تظهر للزبون)</label><textarea id="s_pay"></textarea>
+      <label>إعلان أعلى الموقع (اتركه فارغ لإخفائه)</label><input id="s_banner" maxlength="120" placeholder="مثلاً: تخفيضات 11.11 بدات 🔥">
+      <label>رابط التواصل (تيليغرام / واتساب) يظهر كزر 💬</label><input id="s_contact" type="url" placeholder="https://t.me/...">
+      <div id="sMsg"></div>
+      <button id="s_save" class="full">حفظ الإعدادات</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { firebaseConfig, ADMIN_EMAIL, DEFAULTS, calc, STATUS, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const $ = id => document.getElementById(id);
+$("logo").innerHTML = LOGO(44);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app), db = getFirestore(app);
+
+let settings = { ...DEFAULTS }, all = [], reviews = [], unsubs = [], filter = "";
+const openIds = new Set();
+
+$("logout").onclick = () => signOut(auth);
+$("authBtn").onclick = async () => {
+  $("authMsg").innerHTML = "";
+  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value); }
+  catch (e) { $("authMsg").innerHTML = '<div class="msg err">بيانات غالطة</div>'; }
+};
+$("gBtn").onclick = async () => {
+  $("authMsg").innerHTML = "";
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { if (!["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(e.code)) $("authMsg").innerHTML = '<div class="msg err">تعذر الدخول بـ Google</div>'; }
+};
+
+function tab(t) {
+  $("viewO").classList.toggle("hide", t !== "o");
+  $("viewR").classList.toggle("hide", t !== "r");
+  $("viewS").classList.toggle("hide", t !== "s");
+  $("tabO").className = t === "o" ? "" : "sec"; $("tabR").className = t === "r" ? "" : "sec"; $("tabS").className = t === "s" ? "" : "sec";
+}
+$("tabO").onclick = () => tab("o"); $("tabR").onclick = () => tab("r"); $("tabS").onclick = () => tab("s");
+
+function fillSettings() {
+  $("s_rate").value = settings.rate; $("s_pct").value = settings.commissionPct; $("s_min").value = settings.minCommission;
+  $("s_ship").value = settings.shippingUsd; $("s_pay").value = settings.payInfo; $("s_banner").value = settings.banner || ""; $("s_contact").value = settings.contact || "";
+}
+$("s_save").onclick = async () => {
+  const s = {
+    rate: parseFloat($("s_rate").value), commissionPct: parseFloat($("s_pct").value), minCommission: parseFloat($("s_min").value),
+    shippingUsd: parseFloat($("s_ship").value), payInfo: $("s_pay").value.trim(), banner: $("s_banner").value.trim(), contact: httpsOnly($("s_contact").value.trim())
+  };
+  if ([s.rate, s.commissionPct, s.minCommission, s.shippingUsd].some(x => !(x >= 0)) || !(s.rate > 0)) {
+    $("sMsg").innerHTML = '<div class="msg err">تأكد من القيم</div>'; return;
+  }
+  try { await setDoc(doc(db, "config", "settings"), s); settings = s; render(); $("sMsg").innerHTML = '<div class="msg ok">تم الحفظ ✓</div>'; }
+  catch (e) { $("sMsg").innerHTML = '<div class="msg err">فشل الحفظ</div>'; }
+};
+
+function render() {
+  const counts = {};
+  all.forEach(o => counts[o.status] = (counts[o.status] || 0) + 1);
+  const profit = all.filter(o => o.status === "delivered").reduce((a, o) => a + (o.commission || 0), 0);
+  const problems = (counts.delayed || 0) + (counts.held || 0);
+  $("tiles").innerHTML = `
+    <div class="tile"><b>${counts.new || 0}</b><span>⏳ في انتظار الدفع</span></div>
+    <div class="tile"><b class="grad">${counts.paid || 0}</b><span>🛍️ جاهزة للشراء</span></div>
+    <div class="tile"><b>${problems}</b><span>⚠️ متأخرة / محجوزة</span></div>
+    <div class="tile"><b>${profit} دج</b><span>💰 عمولة الطلبات المسلّمة</span></div>`;
+
+  $("chips").innerHTML = `<button class="chip ${filter ? "" : "on"}" data-chip="">الكل (${all.length})</button>` +
+    Object.entries(STATUS).filter(([k]) => counts[k]).map(([k, v]) => `<button class="chip ${filter === k ? "on" : ""}" data-chip="${k}">${esc(v)} (${counts[k]})</button>`).join("");
+
+  const list = filter ? all.filter(o => o.status === filter) : all;
+  $("orders").innerHTML = list.map(o => {
+    const exp = calc(o.priceUsd, o.qty, settings).total;
+    const mismatch = Math.abs(exp - o.totalDzd) > 10;
+    const img = httpsOnly(o.image);
+    return `<details data-id="${esc(o.id)}" ${openIds.has(o.id) ? "open" : ""}>
+      <summary><div class="ord">
+        ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph">📦</div>'}
+        <div class="grow"><b>${esc(o.name)} ${o.lastMsgFrom === "customer" ? '<span class="dot"></span>' : ""}</b>
+          <div class="muted">${o.store ? esc(o.store) + " · " : ""}${esc(o.title || "منتج")} · ${esc(o.totalDzd)} دج</div></div>
+        <span class="badge b-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span>
+      </div></summary>
+      <div class="body">
+        <div class="kv"><span>${esc(timeFmt(o.createdAt))}</span></div>
+        <div class="kv">${esc(o.priceUsd)}$ × ${esc(o.qty)} · المطلوب <b>${esc(o.totalDzd)} دج</b>
+          ${mismatch ? `<span class="badge b-held">بالإعدادات الحالية: ${exp} دج</span>` : ""}</div>
+        ${o.notes ? `<div class="kv"><span>ملاحظات:</span> ${esc(o.notes)}</div>` : ""}
+        <div class="kv">👤 ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
+        <div class="kv">📍 ${esc(o.wilaya)} / ${esc(o.daira || "—")} / ${esc(o.postalCode || "—")}<br>${esc(o.address)}</div>
+        <div class="kv">🧾 وصل الدفع: <b>${esc(o.paymentRef || "—")}</b></div>
+        <label>الحالة</label>
+        <select data-f="status" data-id="${esc(o.id)}">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === o.status ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>
+        <label>رقم التتبع</label><input data-f="tracking" data-id="${esc(o.id)}" value="${esc(o.tracking)}">
+        <label>ملاحظة تظهر للزبون (سبب التأخر / الحجز / الإرجاع)</label>
+        <textarea data-f="adminNote" data-id="${esc(o.id)}">${esc(o.adminNote)}</textarea>
+        <div class="row" style="margin-top:12px">
+          <button data-save="${esc(o.id)}" style="margin:0">حفظ</button>
+          <a class="btn sec" style="margin:0" href="chat.html?o=${encodeURIComponent(o.id)}">💬 دردشة</a>
+          <a class="btn sec" style="margin:0" href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer">🔗 المنتج</a>
+        </div>
+      </div></details>`;
+  }).join("") || '<div class="muted">لا توجد طلبات</div>';
+}
+
+function renderReviews() {
+  $("revs").innerHTML = reviews.map(r => `<div class="card"><b>${esc(r.name)}</b> <span class="stars">${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}</span>
+    <span class="muted"> ${esc(timeFmt(r.createdAt))}</span>${r.text ? `<div>${esc(r.text)}</div>` : ""}
+    <button class="sec sm" data-delrev="${esc(r.id)}" style="margin-top:10px">🗑️ حذف</button></div>`).join("") || '<div class="muted">لا توجد آراء بعد</div>';
+}
+$("revs").addEventListener("click", async e => {
+  const id = e.target.dataset?.delrev;
+  if (!id || !confirm("حذف هذا التقييم؟")) return;
+  try { await deleteDoc(doc(db, "reviews", id)); } catch (err) { e.target.textContent = "خطأ"; }
+});
+
+$("chips").addEventListener("click", e => { if (e.target.dataset?.chip === undefined) return; filter = e.target.dataset.chip; render(); });
+$("orders").addEventListener("toggle", e => { const id = e.target.dataset?.id; if (!id) return; e.target.open ? openIds.add(id) : openIds.delete(id); }, true);
+$("orders").addEventListener("click", async e => {
+  const id = e.target.dataset?.save;
+  if (!id) return;
+  const get = f => [...document.querySelectorAll("[data-id]")].find(x => x.dataset.id === id && x.dataset.f === f).value;
+  try {
+    await updateDoc(doc(db, "orders", id), { status: get("status"), tracking: get("tracking").trim(), adminNote: get("adminNote").trim(), updatedAt: serverTimestamp() });
+    e.target.textContent = "تم ✓";
+  } catch (err) { e.target.textContent = "خطأ"; }
+});
+
+onAuthStateChanged(auth, async u => {
+  unsubs.forEach(f => f()); unsubs = [];
+  const isAdmin = !!u && u.email === ADMIN_EMAIL && u.emailVerified;
+  $("authBox").classList.toggle("hide", !!u);
+  $("logout").classList.toggle("hide", !u);
+  $("denied").classList.toggle("hide", !(u && !isAdmin));
+  $("panel").classList.toggle("hide", !isAdmin);
+  if (!isAdmin) return;
+  try { const s = await getDoc(doc(db, "config", "settings")); if (s.exists()) settings = { ...DEFAULTS, ...s.data() }; } catch (e) {}
+  fillSettings();
+  unsubs.push(onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), snap => {
+    all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!$("orders").contains(document.activeElement)) render(); // ما نمسحوش اللي راك تكتب فيه
+  }));
+  unsubs.push(onSnapshot(query(collection(db, "reviews"), orderBy("createdAt", "desc")), snap => {
+    reviews = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderReviews();
+  }));
+});
+</script>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js")})</script>
+</body>
+</html>

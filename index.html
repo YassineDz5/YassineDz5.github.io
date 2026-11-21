@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0d0e12">
+<title>FoxDz — اشري من برا</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;var b=document.getElementById('installBtn');if(b)b.classList.remove('hide')})</script>
+<link rel="stylesheet" href="style.css">
+<script>if(location.protocol==='file:'){addEventListener('DOMContentLoaded',function(){var d=document.createElement('div');d.className='msg err';d.style.margin='14px';d.textContent='⚠️ راك فاتح الصفحة من الملف مباشرة. لازم تفتحها عبر رابط الموقع (GitHub Pages) أو localhost باش Firebase يخدم.';document.body.insertBefore(d,document.body.firstChild)})}</script>
+<script>document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">')</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><span id="logo"></span><div>Fox<b>Dz</b><small>اشري من برا بلا فيزا</small></div></div>
+    <div style="display:flex;gap:8px"><button id="installBtn" class="sm hide" style="margin:0">📲 ثبّت التطبيق</button><button id="logout" class="sec sm hide" style="margin:0">خروج</button></div>
+  </div>
+  <div id="banner" class="banner hide"></div>
+
+  <!-- ===== تبويب: اطلب ===== -->
+  <section id="t_new">
+    <div id="authBox">
+      <h1>اشري من أي متجر عالمي بلا بطاقة فيزا 🔥</h1>
+      <div class="muted">AliExpress · Temu · Shein · Amazon · eBay وغيرهم. حط اللينك، ادفع بالدينار، وتوصلك السلعة.</div>
+      <div class="steps">
+        <div class="step"><i>🔗</i>حط اللينك</div>
+        <div class="step"><i>💸</i>ادفع بالدينار</div>
+        <div class="step"><i>🛍️</i>نشريلك</div>
+        <div class="step"><i>🚚</i>توصلك</div>
+      </div>
+      <div class="card">
+        <h2 id="authTitle">دخول</h2>
+        <label>الإيميل</label><input id="email" type="email" autocomplete="email">
+        <label>كلمة السر</label><input id="pass" type="password" autocomplete="current-password">
+        <div id="authMsg"></div>
+        <button id="authBtn" class="full">دخول</button>
+        <button id="authToggle" class="sec full">ما عندكش حساب؟ سجّل</button>
+        <div class="or">أو</div>
+        <button id="gBtn" class="sec full" style="margin-top:8px">🔵 الدخول بحساب Google</button>
+      </div>
+    </div>
+
+    <div id="orderBox" class="hide">
+      <div class="card">
+        <h2>🛒 طلب جديد</h2>
+        <label>لينك المنتج (من أي متجر)</label>
+        <div class="row" style="align-items:stretch">
+          <input id="link" type="url" placeholder="https://..." style="flex:3">
+          <button id="fetchBtn" class="sec sm" style="flex:1;margin:0">جلب ⚡</button>
+        </div>
+        <div id="storeTag" class="muted" style="margin-top:6px"></div>
+        <div id="fetchMsg"></div>
+        <div id="preview" class="ord hide" style="margin-top:10px"></div>
+        <label>اسم المنتج</label><input id="title" maxlength="150">
+        <div class="row">
+          <div><label>السعر بالدولار $</label><input id="price" type="number" step="0.01" min="0.01" inputmode="decimal"></div>
+          <div><label>الكمية</label><input id="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></div>
+        </div>
+        <label>ملاحظات (لون، مقاس...)</label><textarea id="notes" maxlength="500"></textarea>
+        <div id="quote" class="quote hide"></div>
+
+        <h2 style="margin-top:22px">📍 معلومات التوصيل</h2>
+        <label>الاسم الكامل</label><input id="name" autocomplete="name">
+        <label>رقم الهاتف</label><input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" autocomplete="tel">
+        <div class="row">
+          <div><label>الولاية</label><select id="wilaya"></select></div>
+          <div><label>الدائرة</label><input id="daira"></div>
+        </div>
+        <label>الرمز البريدي</label><input id="postal" inputmode="numeric" maxlength="5" placeholder="16000">
+        <label>العنوان الكامل</label><textarea id="address"></textarea>
+        <div class="note">🚚 التوصيل يتم عبر <b>بريد سريع</b> أو <b>بريد الجزائر (البوشطة)</b>، حسب ما يعتمده المتجر وتوفر الخدمة في منطقتك.</div>
+        <div id="orderMsg"></div>
+        <button id="submit" class="full">تأكيد الطلب 🚀</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== تبويب: طلباتي ===== -->
+  <section id="t_orders" class="hide">
+    <h2>📦 طلباتي</h2>
+    <div id="ordersLogin" class="card hide"><div class="muted">سجّل الدخول باش تشوف طلباتك.</div><button class="full" id="goLogin">دخول</button></div>
+    <div id="orders"></div>
+    <div id="accCard" class="card hide">
+      <h2>⚙️ الحساب</h2>
+      <div class="muted" id="who"></div>
+      <button id="delAcc" class="sec sm" style="margin-top:10px">🗑️ حذف حسابي</button>
+    </div>
+  </section>
+
+  <!-- ===== تبويب: العروض ===== -->
+  <section id="t_deals" class="hide">
+    <div class="card"><h2>🔥 مواعيد التخفيضات العالمية</h2><div id="sales"></div>
+      <div class="muted" style="margin-top:8px">التواريخ تقريبية، تأكد من المتجر.</div></div>
+    <div class="card"><h2>🏆 الأكثر طلباً</h2><div id="top"><div class="muted">...</div></div></div>
+    <div class="card"><h2>🏪 تصفح المتاجر</h2><div id="stores" class="grid2"></div>
+      <div class="muted" style="margin-top:8px">لقيت منتج؟ انسخ اللينك وارجع لتبويب "اطلب".</div></div>
+  </section>
+
+  <!-- ===== تبويب: الآراء ===== -->
+  <section id="t_reviews" class="hide">
+    <div class="card"><h2>⭐ آراء الزبائن</h2><div id="revSum" class="muted"></div><div id="revs"></div></div>
+    <div class="card"><h2>❓ أسئلة شائعة</h2>
+      <details><summary><b>كيفاش نطلب؟</b></summary><div class="body" style="padding:10px 0">سجّل الدخول، حط لينك المنتج، عبّي معلومات التوصيل، وأكد الطلب. يظهرلك المبلغ بالدينار.</div></details>
+      <details><summary><b>كيفاش ندفع؟</b></summary><div class="body" style="padding:10px 0">بالدينار عبر الطريقة المذكورة بعد تأكيد الطلب، وتحط رقم الوصل في "طلباتي".</div></details>
+      <details><summary><b>واش المبلغ يتبدل؟</b></summary><div class="body" style="padding:10px 0">المبلغ يتحسب بسعر الصرف والعمولة وقت الطلب. إذا تبدل سعر المنتج عند المتجر قبل الشراء نكلموك في الدردشة.</div></details>
+      <details><summary><b>كيفاش نتابع طلبي؟</b></summary><div class="body" style="padding:10px 0">من "طلباتي": الحالة ورقم التتبع، وتقدر تدردش معانا في كل طلب.</div></details>
+      <details><summary><b>واش يصرالي إذا احتجز الطلب في الجمارك أو ما وصلش؟</b></summary><div class="body" style="padding:10px 0">نرجعو المال حسب الحالة (تأخر أو حجز). التفاصيل في <a href="privacy.html">سياسة الاسترجاع</a>.</div></details>
+      <details><summary><b>كيفاش يوصلني الطرد؟</b></summary><div class="body" style="padding:10px 0">عبر بريد سريع أو بريد الجزائر (البوشطة)، حسب ما يعتمده المتجر وتوفر الخدمة في منطقتك.</div></details>
+    </div>
+  </section>
+
+  <div class="muted" style="text-align:center;margin-top:22px"><a href="privacy.html">سياسة الخصوصية والاسترجاع</a></div>
+</div>
+
+<a id="fab" class="fab hide" target="_blank" rel="noopener noreferrer">💬</a>
+<nav class="nav">
+  <button data-nav="new" class="on"><i>🛒</i>اطلب</button>
+  <button data-nav="orders"><i>📦</i>طلباتي</button>
+  <button data-nav="deals"><i>🔥</i>العروض</button>
+  <button data-nav="reviews"><i>⭐</i>الآراء</button>
+</nav>
+
+<script type="module">
+import { firebaseConfig, DEFAULTS, calc, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+const $ = id => document.getElementById(id);
+$("logo").innerHTML = LOGO(44);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app), db = getFirestore(app), fns = getFunctions(app);
+
+let settings = { ...DEFAULTS };
+let user = null, unsubOrders = null, unsubMine = null, registering = false, image = "";
+let myOrders = [], myReviewed = new Set();
+const rates = {};
+
+const authErrors = {
+  "auth/invalid-credential": "الإيميل أو كلمة السر غالطة",
+  "auth/email-already-in-use": "هذا الإيميل مسجل من قبل",
+  "auth/weak-password": "كلمة السر لازم 6 حروف على الأقل",
+  "auth/invalid-email": "الإيميل غير صحيح",
+  "auth/network-request-failed": "مشكل في الانترنت",
+  "auth/popup-blocked": "المتصفح بلوك النافذة، سمح بالنوافذ المنبثقة",
+  "auth/unauthorized-domain": "هذا الدومين غير مضاف في Firebase (Authorized domains)",
+  "auth/operation-not-allowed": "دخول Google غير مفعّل في Firebase"
+};
+function msg(el, text, ok) { el.innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+
+// ===== التبويبات =====
+function show(tab) {
+  ["new", "orders", "deals", "reviews"].forEach(t => $("t_" + t).classList.toggle("hide", t !== tab));
+  document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("on", b.dataset.nav === tab));
+  scrollTo(0, 0);
+}
+document.querySelectorAll("[data-nav]").forEach(b => b.onclick = () => show(b.dataset.nav));
+$("goLogin").onclick = () => show("new");
+
+// ===== الدخول =====
+$("wilaya").innerHTML = '<option value="">اختر الولاية</option>' + WILAYAS.map(w => `<option>${esc(w)}</option>`).join("");
+$("authToggle").onclick = () => {
+  registering = !registering;
+  $("authTitle").textContent = registering ? "حساب جديد" : "دخول";
+  $("authBtn").textContent = registering ? "تسجيل" : "دخول";
+  $("authToggle").textContent = registering ? "عندي حساب؟ دخول" : "ما عندكش حساب؟ سجّل";
+};
+$("authBtn").onclick = async () => {
+  msg($("authMsg"), "");
+  try {
+    const f = registering ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
+    await f(auth, $("email").value.trim(), $("pass").value);
+  } catch (e) { msg($("authMsg"), authErrors[e.code] || "صار مشكل، عاود حاول"); }
+};
+$("gBtn").onclick = async () => {
+  msg($("authMsg"), "");
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { if (!["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(e.code)) msg($("authMsg"), authErrors[e.code] || "تعذر الدخول بـ Google"); }
+};
+$("logout").onclick = () => signOut(auth);
+$("delAcc").onclick = async () => {
+  if (!confirm("متأكد تحب تحذف حسابك؟ ما تقدرش ترجعو.")) return;
+  try { await deleteUser(auth.currentUser); }
+  catch (e) { alert(e.code === "auth/requires-recent-login" ? "لأسباب أمنية: اخرج وادخل من جديد، ثم عاود حذف الحساب." : "تعذر حذف الحساب"); }
+};
+if (window.__bip) $("installBtn").classList.remove("hide");
+$("installBtn").onclick = async () => { const p = window.__bip; if (!p) return; p.prompt(); await p.userChoice; window.__bip = null; $("installBtn").classList.add("hide"); };
+
+// ===== الإعدادات (سعر الصرف، إعلان، تواصل) =====
+async function loadSettings() {
+  try { const s = await getDoc(doc(db, "config", "settings")); if (s.exists()) settings = { ...DEFAULTS, ...s.data() }; } catch (e) {}
+  $("banner").textContent = settings.banner || ""; $("banner").classList.toggle("hide", !settings.banner);
+  const c = httpsOnly(settings.contact);
+  $("fab").classList.toggle("hide", !c); if (c) $("fab").href = c;
+  updateQuote();
+}
+
+// ===== الحساب والسعر =====
+function updateQuote() {
+  const p = parseFloat($("price").value), q = parseInt($("qty").value) || 1, box = $("quote");
+  if (!(p > 0)) { box.classList.add("hide"); return; }
+  const c = calc(p, q, settings);
+  box.classList.remove("hide");
+  box.innerHTML = `المنتج: ${c.itemsDzd} دج · الشحن: ${c.shipDzd} دج · العمولة: ${c.commission} دج<div class="tot grad">${c.total} دج</div>`;
+}
+["price", "qty"].forEach(id => $(id).addEventListener("input", updateQuote));
+$("link").addEventListener("input", () => { const s = storeOf($("link").value.trim()); $("storeTag").textContent = s ? "🏪 " + s : ""; });
+
+// ===== جلب بيانات المنتج =====
+$("fetchBtn").onclick = async () => {
+  const link = $("link").value.trim();
+  if (!/^https?:\/\//i.test(link)) return msg($("fetchMsg"), "حط لينك صحيح");
+  $("fetchBtn").disabled = true; $("fetchBtn").textContent = "...";
+  msg($("fetchMsg"), "");
+  try {
+    const r = (await httpsCallable(fns, "fetchProduct")({ url: link })).data || {};
+    if (r.title) $("title").value = r.title.slice(0, 150);
+    image = httpsOnly(r.image);
+    $("preview").classList.toggle("hide", !image);
+    $("preview").innerHTML = image ? `<img src="${esc(image)}" alt="" referrerpolicy="no-referrer"><div class="grow"><b>${esc(r.title || "")}</b></div>` : "";
+    if (r.price && r.currency === "USD") { $("price").value = r.price; updateQuote(); msg($("fetchMsg"), "تم الجلب. راجع السعر قبل التأكيد.", true); }
+    else if (r.price) msg($("fetchMsg"), `لقينا السعر ${r.price} ${r.currency || ""} (ماشي دولار). حطو بالدولار بيدك.`);
+    else msg($("fetchMsg"), r.title ? "جبنا الاسم، السعر عبّيه بيدك." : "ما قدرناش نجيبو البيانات، عبّيها بيدك.");
+  } catch (e) { msg($("fetchMsg"), "الجلب غير متوفر لهذا المتجر، عبّي البيانات بيدك."); }
+  $("fetchBtn").disabled = false; $("fetchBtn").textContent = "جلب ⚡";
+};
+
+// ===== تأكيد الطلب =====
+$("submit").onclick = async () => {
+  const link = $("link").value.trim(), price = parseFloat($("price").value), qty = parseInt($("qty").value);
+  const name = $("name").value.trim(), phone = $("phone").value.trim().replace(/\s/g, "");
+  const wilaya = $("wilaya").value, daira = $("daira").value.trim(), postal = $("postal").value.trim(), address = $("address").value.trim();
+  const em = $("orderMsg");
+  if (!/^https?:\/\//i.test(link)) return msg(em, "حط لينك المنتج صحيح");
+  if (!(price > 0)) return msg(em, "حط سعر المنتج بالدولار");
+  if (!(qty >= 1 && qty <= 20)) return msg(em, "الكمية بين 1 و 20");
+  if (name.length < 3) return msg(em, "حط اسمك الكامل");
+  if (!/^0[567]\d{8}$/.test(phone)) return msg(em, "رقم الهاتف غير صحيح");
+  if (!wilaya) return msg(em, "اختر الولاية");
+  if (daira.length < 2) return msg(em, "حط الدائرة");
+  if (!/^\d{5}$/.test(postal)) return msg(em, "الرمز البريدي لازم 5 أرقام");
+  if (address.length < 6) return msg(em, "كمّل العنوان");
+  const c = calc(price, qty, settings);
+  $("submit").disabled = true;
+  try {
+    await addDoc(collection(db, "orders"), {
+      uid: user.uid, email: user.email, link, store: storeOf(link), title: $("title").value.trim(), image, priceUsd: price, qty,
+      notes: $("notes").value.trim(), name, phone, wilaya, daira, postalCode: postal, address,
+      itemsDzd: c.itemsDzd, shipDzd: c.shipDzd, commission: c.commission, totalDzd: c.total,
+      rate: settings.rate, status: "new", paymentRef: "", tracking: "", adminNote: "", createdAt: serverTimestamp()
+    });
+    msg(em, `تسجل الطلب ✅ المبلغ: ${c.total} دج. ${settings.payInfo} ثم حط رقم الوصل في "طلباتي".`, true);
+    ["link", "title", "price", "notes"].forEach(id => $(id).value = "");
+    $("qty").value = 1; image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
+  } catch (e) { msg(em, "ما تسجلش الطلب، عاود حاول"); }
+  $("submit").disabled = false;
+};
+
+// ===== طلباتي + التقييم =====
+function renderOrders() {
+  const list = [...myOrders].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  $("orders").innerHTML = list.length ? list.map(o => {
+    const img = httpsOnly(o.image);
+    const reply = o.lastMsgFrom === "admin" || o.lastMsgFrom === "system";
+    const canRate = o.status === "delivered" && !myReviewed.has(o.id);
+    return `<div class="card">
+      <div class="ord">
+        ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph">📦</div>'}
+        <div class="grow"><b>${esc(o.title || "منتج")}</b>
+          <div class="muted">${o.store ? esc(o.store) + " · " : ""}الكمية ${esc(o.qty)} · ${esc(o.totalDzd)} دج</div></div>
+        <span class="badge b-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span>
+      </div>
+      ${o.tracking ? `<div class="kv"><span>رقم التتبع:</span> <b>${esc(o.tracking)}</b></div>` : ""}
+      ${o.adminNote ? `<div class="msg ok">${esc(o.adminNote)}</div>` : ""}
+      ${o.status === "new" ? `
+        <label>رقم وصل الدفع</label>
+        <div class="row"><input data-ref="${esc(o.id)}" value="${esc(o.paymentRef)}"><button class="sec sm" data-save="${esc(o.id)}" style="flex:0 0 auto">حفظ</button></div>` : ""}
+      ${canRate ? `<div class="note" data-revbox="${esc(o.id)}" data-rate="5">
+          <b>⭐ كيفاش كانت تجربتك؟</b><div>${[1, 2, 3, 4, 5].map(n => `<span class="star on" data-star="${n}">★</span>`).join("")}</div>
+          <textarea data-revtxt="${esc(o.id)}" maxlength="500" placeholder="رايك في الخدمة (اختياري)"></textarea>
+          <button class="sm" data-rev="${esc(o.id)}">نشر التقييم</button></div>` : ""}
+      <div class="row" style="margin-top:12px">
+        <a class="btn sm" href="chat.html?o=${encodeURIComponent(o.id)}">💬 دردشة ${reply ? '<span class="dot"></span>' : ""}</a>
+        <a class="btn sec sm" href="${esc(safeUrl(o.link))}" target="_blank" rel="noopener noreferrer">🔗 المنتج</a>
+      </div>
+    </div>`;
+  }).join("") : '<div class="muted">ما عندكش طلبات بعد</div>';
+}
+$("orders").addEventListener("click", async e => {
+  const t = e.target;
+  if (t.dataset.star) {
+    const box = t.closest("[data-revbox]"); box.dataset.rate = t.dataset.star;
+    box.querySelectorAll("[data-star]").forEach(s => s.classList.toggle("on", +s.dataset.star <= +t.dataset.star));
+    return;
+  }
+  if (t.dataset.save) {
+    const inp = [...document.querySelectorAll("[data-ref]")].find(x => x.dataset.ref === t.dataset.save);
+    try { await updateDoc(doc(db, "orders", t.dataset.save), { paymentRef: inp.value.trim() }); t.textContent = "تم ✓"; } catch (err) { t.textContent = "خطأ"; }
+    return;
+  }
+  if (t.dataset.rev) {
+    const id = t.dataset.rev, o = myOrders.find(x => x.id === id);
+    const box = [...document.querySelectorAll("[data-revbox]")].find(x => x.dataset.revbox === id);
+    const txt = [...document.querySelectorAll("[data-revtxt]")].find(x => x.dataset.revtxt === id).value.trim();
+    t.disabled = true;
+    try {
+      await setDoc(doc(db, "reviews", id), { uid: user.uid, name: String(o.name || "زبون").split(" ")[0], rating: +box.dataset.rate, text: txt, createdAt: serverTimestamp() });
+    } catch (err) { t.disabled = false; t.textContent = "تعذر النشر، عاود"; }
+  }
+});
+
+// ===== العروض =====
+function renderSales() {
+  $("sales").innerHTML = nextSales().map(s => `<div class="sale"><div><b>${esc(s.name)}</b><div class="muted">${esc(s.date.toLocaleDateString("ar-DZ", { day: "numeric", month: "long" }))}</div></div>
+    <div class="d">${s.days === 0 ? "اليوم! 🔥" : s.days === 1 ? "غدوة" : "بعد " + s.days + " يوم"}</div></div>`).join("");
+}
+$("stores").innerHTML = STORES.map(s => `<a class="btn sec sm" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" style="margin:0">${esc(s.name)}</a>`).join("");
+let topList = [];
+function renderTop() {
+  $("top").innerHTML = topList.length ? topList.map((p, i) => {
+    const img = httpsOnly(p.image);
+    return `<div class="sale"><div class="ord" style="flex:1;min-width:0">
+      ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph">🛍️</div>'}
+      <div class="grow"><b>${i + 1}. ${esc(p.title || "منتج")}</b><div class="muted">${p.store ? esc(p.store) + " · " : ""}طُلب ${esc(p.count)} مرة</div></div></div>
+      <button class="sm" data-use="${esc(p.id)}" style="margin:0">اطلبه</button></div>`;
+  }).join("") : '<div class="muted">كي تتشرى أول المنتجات تظهر هنا.</div>';
+}
+$("top").addEventListener("click", e => {
+  const p = topList.find(x => x.id === e.target.dataset?.use); if (!p) return;
+  $("link").value = p.link || ""; $("title").value = p.title || ""; image = httpsOnly(p.image);
+  $("storeTag").textContent = p.store ? "🏪 " + p.store : "";
+  $("preview").classList.toggle("hide", !image);
+  $("preview").innerHTML = image ? `<img src="${esc(image)}" alt="" referrerpolicy="no-referrer"><div class="grow"><b>${esc(p.title || "")}</b></div>` : "";
+  show("new");
+});
+onSnapshot(query(collection(db, "topProducts"), orderBy("count", "desc"), limit(10)),
+  s => { topList = s.docs.map(d => ({ id: d.id, ...d.data() })); renderTop(); }, () => { $("top").innerHTML = '<div class="muted">كي تتشرى أول المنتجات تظهر هنا.</div>'; });
+
+// ===== الآراء =====
+onSnapshot(query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(30)), s => {
+  const l = s.docs.map(d => d.data());
+  const avg = l.length ? (l.reduce((a, r) => a + (r.rating || 0), 0) / l.length).toFixed(1) : null;
+  $("revSum").innerHTML = avg ? `<span class="stars">★</span> <b>${avg}</b> من 5 · ${l.length} تقييم` : "ما كاينش تقييمات بعد. التقييم يفتح للزبائن بعد استلام الطلب.";
+  $("revs").innerHTML = l.map(r => `<div class="rev"><b>${esc(r.name)}</b> <span class="stars">${"★".repeat(r.rating || 0)}${"☆".repeat(5 - (r.rating || 0))}</span>
+    <span class="muted"> ${esc(timeFmt(r.createdAt))}</span>${r.text ? `<div>${esc(r.text)}</div>` : ""}</div>`).join("");
+}, () => { $("revSum").textContent = ""; });
+
+renderSales(); renderTop();
+
+// ===== حالة الدخول =====
+onAuthStateChanged(auth, async u => {
+  user = u;
+  [unsubOrders, unsubMine].forEach(f => f && f()); unsubOrders = unsubMine = null;
+  $("authBox").classList.toggle("hide", !!u);
+  $("orderBox").classList.toggle("hide", !u);
+  $("ordersLogin").classList.toggle("hide", !!u);
+  $("accCard").classList.toggle("hide", !u);
+  $("logout").classList.toggle("hide", !u);
+  myOrders = []; myReviewed = new Set(); renderOrders();
+  await loadSettings();
+  if (!u) return;
+  $("who").textContent = u.email || "";
+  if (u.displayName && !$("name").value) $("name").value = u.displayName;
+  unsubOrders = onSnapshot(query(collection(db, "orders"), where("uid", "==", u.uid)),
+    s => { myOrders = s.docs.map(d => ({ id: d.id, ...d.data() })); renderOrders(); },
+    () => { $("orders").innerHTML = '<div class="msg err">تعذر تحميل الطلبات</div>'; });
+  unsubMine = onSnapshot(query(collection(db, "reviews"), where("uid", "==", u.uid)),
+    s => { myReviewed = new Set(s.docs.map(d => d.id)); renderOrders(); }, () => {});
+});
+</script>
+<script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js")})</script>
+</body>
+</html>
