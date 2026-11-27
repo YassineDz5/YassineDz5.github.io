@@ -16,14 +16,14 @@ export const VAPID_KEY = "";
 export const ADMIN_EMAIL = "yassine99belalia@gmail.com";
 
 export const DEFAULTS = {
-  rate: 250,          // دينار لكل 1 دولار
-  commissionPct: 10,  // نسبة العمولة %
-  minCommission: 300, // أقل عمولة بالدينار
+  rate: 260,          // دينار لكل 1 دولار
+  commissionPct: 0,   // نسبة العمولة % (0 = عمولة ثابتة فقط)
+  minCommission: 50,  // العمولة الثابتة بالدينار لكل طلب
   shippingUsd: 3,     // الشحن لكل طلب بالدولار
-  payInfo: "ادفع عبر BaridiMob / CCP على الحساب: ...",
+  payInfo: "CCP: رقم الحساب ... (الاسم ...)\nBaridiMob: RIP ...\nفليكسي (Flexy): الرقم ... (يُضاف مبلغ التحويل)",
   banner: "",         // إعلان يظهر فوق الموقع (اختياري)
   contact: "",        // رابط تواصل (تيليغرام/واتساب) يظهر كزر عائم
-  refDiscountDzd: 200 // خصم على عمولة أول طلب لصديق جاء بكود إحالة
+  refDiscountDzd: 20 // خصم على عمولة أول طلب لصديق جاء بكود إحالة
 };
 
 export function calc(priceUsd, qty, s, disc) {
@@ -132,3 +132,5 @@ export function hookErrors() {
     if (!skip.test(m)) toast("خطأ: " + m);
   });
 }
+
+export const SUPPORT_EMAIL = "alg99dz@gmail.com";

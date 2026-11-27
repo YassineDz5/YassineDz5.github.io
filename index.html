@@ -105,7 +105,14 @@
         </div>
         <label>الرمز البريدي</label><input id="postal" inputmode="numeric" maxlength="5" placeholder="16000">
         <label>العنوان الكامل</label><textarea id="address"></textarea>
+        <div class="card" style="margin:14px 0;background:#fffaf3">
+          <h2 style="margin-bottom:6px">طرق الدفع</h2>
+          <div id="payBox" class="muted" style="white-space:pre-line;color:var(--txt)"></div>
+          <div class="muted" style="margin-top:6px">تدفع بعد تأكيد الطلب، ثم تحط رقم الوصل في "طلباتي".</div>
+        </div>
         <div class="note">🚚 التوصيل يتم عبر <b>بريد سريع</b> أو <b>بريد الجزائر (البوشطة)</b>، حسب ما يعتمده المتجر وتوفر الخدمة في منطقتك.</div>
+        <div class="note" style="background:#fdeaea;border-color:#efb8b8;color:#7a1f1f">⛔ <b>ممنوع</b> طلب الأسلحة، المسيّرات، الأدوية، الكحول، المقلّد، والمستعمل، وغيرها. <a href="prohibited.html" target="_blank" rel="noopener">شوف القائمة كاملة</a>. وإذا تحجز طلبك في الجمارك فهذا ما يدخلش في مسؤوليتنا.</div>
+        <label class="chk"><input id="ok_terms" type="checkbox"><span>قريت قائمة الممنوعات وسياسة الاسترجاع (<a href="privacy.html" target="_blank" rel="noopener">الشروط</a>) وموافق.</span></label>
         <div id="orderMsg"></div>
         <button id="submit" class="full">تأكيد الطلب 🚀</button>
       </div>
@@ -146,12 +153,13 @@
       <details><summary><b>كيفاش ندفع؟</b></summary><div class="body" style="padding:10px 0">بالدينار عبر الطريقة المذكورة بعد تأكيد الطلب، وتحط رقم الوصل في "طلباتي".</div></details>
       <details><summary><b>واش المبلغ يتبدل؟</b></summary><div class="body" style="padding:10px 0">المبلغ يتحسب بسعر الصرف والعمولة وقت الطلب. إذا تبدل سعر المنتج عند المتجر قبل الشراء نكلموك في الدردشة.</div></details>
       <details><summary><b>كيفاش نتابع طلبي؟</b></summary><div class="body" style="padding:10px 0">من "طلباتي": الحالة ورقم التتبع، وتقدر تدردش معانا في كل طلب.</div></details>
-      <details><summary><b>واش يصرالي إذا احتجز الطلب في الجمارك أو ما وصلش؟</b></summary><div class="body" style="padding:10px 0">نرجعو المال حسب الحالة (تأخر أو حجز). التفاصيل في <a href="privacy.html">سياسة الاسترجاع</a>.</div></details>
+      <details><summary><b>واش يصرالي إذا احتجز الطلب في الجمارك أو تأخر؟</b></summary><div class="body" style="padding:10px 0">ما عندنا علاقة بتأخر المنتجات ولا بحجزها في الجمارك، لكن نعاونك بأقصى ما نقدر عليه ونتابع معاك. الاسترجاع يكون في حالة وحدة: كي المنصة ترجعلنا الأموال، نرجعوهم لك. التفاصيل في <a href="privacy.html">سياسة الخصوصية والاسترجاع</a>.</div></details>
+      <details><summary><b>شنو ممنوع نطلبو؟</b></summary><div class="body" style="padding:10px 0">الأسلحة، المسيّرات، الأدوية، الكحول، المقلّد، والسلع المستعملة وغيرها. شوف <a href="prohibited.html">القائمة كاملة</a>، ولو عندك شك راسلنا قبل الطلب.</div></details>
       <details><summary><b>كيفاش يوصلني الطرد؟</b></summary><div class="body" style="padding:10px 0">عبر بريد سريع أو بريد الجزائر (البوشطة)، حسب ما يعتمده المتجر وتوفر الخدمة في منطقتك.</div></details>
     </div>
   </section>
 
-  <div class="muted" style="text-align:center;margin-top:22px"><a href="privacy.html">سياسة الخصوصية والاسترجاع</a></div>
+  <div class="muted" style="text-align:center;margin-top:22px"><a href="privacy.html">الخصوصية والاسترجاع</a> · <a href="prohibited.html">الممنوعات</a> · <a href="mailto:alg99dz@gmail.com">الدعم: alg99dz@gmail.com</a></div>
 </div>
 
 <a id="fab" class="fab hide" target="_blank" rel="noopener noreferrer">💬</a>
@@ -163,7 +171,7 @@
 </nav>
 
 <script type="module">
-import { toast, hookErrors, firebaseConfig, DEFAULTS, VAPID_KEY, calc, genRef, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { SUPPORT_EMAIL, toast, hookErrors, firebaseConfig, DEFAULTS, VAPID_KEY, calc, genRef, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, onSnapshot, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -315,6 +323,7 @@ async function loadSettings() {
   $("banner").textContent = settings.banner || ""; $("banner").classList.toggle("hide", !settings.banner);
   const c = httpsOnly(settings.contact);
   $("fab").classList.toggle("hide", !c); if (c) $("fab").href = c;
+  $("payBox").textContent = settings.payInfo || "";
   updateQuote();
 }
 
@@ -385,6 +394,7 @@ $("submit").onclick = async () => {
   const em = $("orderMsg");
   if (!auth.currentUser?.emailVerified || !profile.profileDone) return msg(em, "أكّد إيميلك وأكمل ملفك أولاً");
   if (!/^https?:\/\//i.test(link)) return msg(em, "حط لينك المنتج صحيح");
+  if (!$("ok_terms").checked) return msg(em, "لازم توافق على الشروط وقائمة الممنوعات");
   if (!(price > 0)) return msg(em, "حط سعر المنتج بالدولار");
   if (!(qty >= 1 && qty <= 20)) return msg(em, "الكمية بين 1 و 20");
   if (name.length < 3) return msg(em, "حط اسمك الكامل");
@@ -406,10 +416,10 @@ $("submit").onclick = async () => {
     });
     setDoc(doc(db, "users", user.uid), { phone, wilaya, daira, postal, address, updatedAt: serverTimestamp() }, { merge: true }).then(() => { Object.assign(profile, { phone, wilaya, daira, postal, address }); }).catch(() => {});
     msg(em, "");
-    toast(`تسجل الطلب ✅ المبلغ: ${c.total} دج. ${settings.payInfo || ""} ثم حط رقم الوصل في "طلباتي".`, true);
+    toast(`تسجل الطلب ✅ المبلغ: ${c.total} دج. ادفع ثم حط رقم الوصل في "طلباتي".`, true);
     show("orders");
     ["link", "title", "price", "notes"].forEach(id => $(id).value = "");
-    $("qty").value = 1; $("coupon").value = ""; disc = null; msg($("couponMsg"), ""); image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
+    $("ok_terms").checked = false; $("qty").value = 1; $("coupon").value = ""; disc = null; msg($("couponMsg"), ""); image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
   } catch (e) { console.error("order error", e); toast("تعذر تسجيل الطلب: " + (e.code || e.message)); msg(em, "ما تسجلش الطلب (" + (e.code || e.message || "خطأ") + ")"); }
   $("submit").disabled = false;
 };
@@ -432,6 +442,7 @@ function renderOrders() {
       ${o.tracking ? `<div class="kv"><span>رقم التتبع:</span> <b>${esc(o.tracking)}</b></div>` : ""}
       ${o.adminNote ? `<div class="msg ok">${esc(o.adminNote)}</div>` : ""}
       ${o.status === "new" ? `
+        <div class="note" style="white-space:pre-line">طرق الدفع:\n${esc(settings.payInfo || "")}</div>
         <label>رقم وصل الدفع</label>
         <div class="row"><input data-ref="${esc(o.id)}" value="${esc(o.paymentRef)}"><button class="sec sm" data-save="${esc(o.id)}" style="flex:0 0 auto">حفظ</button></div>` : ""}
       ${canRate ? `<div class="note" data-revbox="${esc(o.id)}" data-rate="5">

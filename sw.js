@@ -1,5 +1,5 @@
 // FoxDz service worker: الشبكة أولاً، والكاش كاحتياط (باش التحديثات توصل مباشرة)
-const V = "foxdz-v7";
+const V = "foxdz-v8";
 const SHELL = ["./", "index.html", "chat.html", "admin.html", "style.css", "common.js", "privacy.html", "logo.svg", "icon-192.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
