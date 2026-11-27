@@ -8,6 +8,10 @@ export const firebaseConfig = {
   appId: "1:767695548672:web:94795ceed11846c84e43e5"
 };
 
+// مفتاح VAPID العام لإشعارات Push (Firebase ← Project settings ← Cloud Messaging ← Web Push certificates).
+// اتركه فارغ لإخفاء زر الإشعارات.
+export const VAPID_KEY = "";
+
 // إيميل الأدمن (نفس الإيميل لازم يكون في firestore.rules)
 export const ADMIN_EMAIL = "yassine99belalia@gmail.com";
 
@@ -18,15 +22,19 @@ export const DEFAULTS = {
   shippingUsd: 3,     // الشحن لكل طلب بالدولار
   payInfo: "ادفع عبر BaridiMob / CCP على الحساب: ...",
   banner: "",         // إعلان يظهر فوق الموقع (اختياري)
-  contact: ""         // رابط تواصل (تيليغرام/واتساب) يظهر كزر عائم
+  contact: "",        // رابط تواصل (تيليغرام/واتساب) يظهر كزر عائم
+  refDiscountDzd: 200 // خصم على عمولة أول طلب لصديق جاء بكود إحالة
 };
 
-export function calc(priceUsd, qty, s) {
+export function calc(priceUsd, qty, s, disc) {
   const itemsDzd = priceUsd * qty * s.rate;
   const shipDzd = s.shippingUsd * s.rate;
   const commission = Math.max(s.minCommission, itemsDzd * s.commissionPct / 100);
-  const total = Math.round((itemsDzd + shipDzd + commission) / 10) * 10;
-  return { itemsDzd: Math.round(itemsDzd), shipDzd: Math.round(shipDzd), commission: Math.round(commission), total };
+  let discount = 0; // الخصم يتطبق على العمولة فقط
+  if (disc && disc.value > 0) discount = disc.type === "pct" ? commission * Math.min(disc.value, 100) / 100 : disc.value;
+  discount = Math.min(Math.round(discount), Math.round(commission));
+  const total = Math.round((itemsDzd + shipDzd + commission - discount) / 10) * 10;
+  return { itemsDzd: Math.round(itemsDzd), shipDzd: Math.round(shipDzd), commission: Math.round(commission), discount, total };
 }
 
 export const STATUS = {
@@ -58,8 +66,8 @@ export const LOGO = (size = 40) => `<svg width="${size}" height="${size}" viewBo
 <polygon points="8,4 27,19 37,19 56,4 61,33 32,61 3,33" fill="#ff7a1a"/>
 <polygon points="12,11 22,19 13,24" fill="#c2410c"/><polygon points="52,11 42,19 51,24" fill="#c2410c"/>
 <polygon points="3,33 21,38 32,61" fill="#fff4e6"/><polygon points="61,33 43,38 32,61" fill="#fff4e6"/>
-<ellipse cx="23" cy="31" rx="3" ry="4" fill="#1a0e00"/><ellipse cx="41" cy="31" rx="3" ry="4" fill="#1a0e00"/>
-<circle cx="32" cy="57" r="3.2" fill="#1a0e00"/></svg>`;
+<ellipse cx="23" cy="31" rx="3" ry="4" fill="#211c17"/><ellipse cx="41" cy="31" rx="3" ry="4" fill="#211c17"/>
+<circle cx="32" cy="57" r="3.2" fill="#211c17"/></svg>`;
 
 
 
@@ -96,4 +104,10 @@ export function nextSales(now = new Date()) {
   }
   return list.filter(([, d]) => d >= today).sort((a, b) => a[1] - b[1]).slice(0, 6)
     .map(([name, date]) => ({ name, date, days: Math.round((date - today) / 86400000) }));
+}
+
+const REF_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export function genRef() {
+  const a = new Uint32Array(6); crypto.getRandomValues(a);
+  return [...a].map(n => REF_CHARS[n % REF_CHARS.length]).join("");
 }

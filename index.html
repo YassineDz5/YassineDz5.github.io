@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0d0e12">
+<meta name="theme-color" content="#f7f3ec">
 <title>FoxDz — اشري من برا</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
@@ -13,7 +13,7 @@
 <script>addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;var b=document.getElementById('installBtn');if(b)b.classList.remove('hide')})</script>
 <link rel="stylesheet" href="style.css">
 <script>if(location.protocol==='file:'){addEventListener('DOMContentLoaded',function(){var d=document.createElement('div');d.className='msg err';d.style.margin='14px';d.textContent='⚠️ راك فاتح الصفحة من الملف مباشرة. لازم تفتحها عبر رابط الموقع (GitHub Pages) أو localhost باش Firebase يخدم.';document.body.insertBefore(d,document.body.firstChild)})}</script>
-<script>document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">')</script>
+<script>document.write('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">')</script>
 </head>
 <body>
 <div class="wrap">
@@ -26,13 +26,13 @@
   <!-- ===== تبويب: اطلب ===== -->
   <section id="t_new">
     <div id="authBox">
-      <h1>اشري من أي متجر عالمي بلا بطاقة فيزا 🔥</h1>
+      <h1>اشري من أي متجر عالمي بلا بطاقة فيزا </h1>
       <div class="muted">AliExpress · Temu · Shein · Amazon · eBay وغيرهم. حط اللينك، ادفع بالدينار، وتوصلك السلعة.</div>
       <div class="steps">
-        <div class="step"><i>🔗</i>حط اللينك</div>
-        <div class="step"><i>💸</i>ادفع بالدينار</div>
-        <div class="step"><i>🛍️</i>نشريلك</div>
-        <div class="step"><i>🚚</i>توصلك</div>
+        <div class="step"><i></i>حط اللينك</div>
+        <div class="step"><i></i>ادفع بالدينار</div>
+        <div class="step"><i></i>نشريلك</div>
+        <div class="step"><i></i>توصلك</div>
       </div>
       <div class="card">
         <h2 id="authTitle">دخول</h2>
@@ -48,7 +48,7 @@
 
     <div id="orderBox" class="hide">
       <div class="card">
-        <h2>🛒 طلب جديد</h2>
+        <h2>طلب جديد</h2>
         <label>لينك المنتج (من أي متجر)</label>
         <div class="row" style="align-items:stretch">
           <input id="link" type="url" placeholder="https://..." style="flex:3">
@@ -63,9 +63,15 @@
           <div><label>الكمية</label><input id="qty" type="number" min="1" max="20" value="1" inputmode="numeric"></div>
         </div>
         <label>ملاحظات (لون، مقاس...)</label><textarea id="notes" maxlength="500"></textarea>
+        <label>كود تخفيض أو إحالة (اختياري)</label>
+        <div class="row" style="align-items:stretch">
+          <input id="coupon" placeholder="CODE" style="flex:3;text-transform:uppercase" autocomplete="off">
+          <button id="couponBtn" class="sec sm" style="flex:1;margin:0">تطبيق</button>
+        </div>
+        <div id="couponMsg"></div>
         <div id="quote" class="quote hide"></div>
 
-        <h2 style="margin-top:22px">📍 معلومات التوصيل</h2>
+        <h2 style="margin-top:22px">معلومات التوصيل</h2>
         <label>الاسم الكامل</label><input id="name" autocomplete="name">
         <label>رقم الهاتف</label><input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" autocomplete="tel">
         <div class="row">
@@ -83,11 +89,16 @@
 
   <!-- ===== تبويب: طلباتي ===== -->
   <section id="t_orders" class="hide">
-    <h2>📦 طلباتي</h2>
+    <h2>طلباتي</h2>
     <div id="ordersLogin" class="card hide"><div class="muted">سجّل الدخول باش تشوف طلباتك.</div><button class="full" id="goLogin">دخول</button></div>
     <div id="orders"></div>
     <div id="accCard" class="card hide">
-      <h2>⚙️ الحساب</h2>
+      <h2>ادعُ صديقاً</h2>
+      <div class="muted">صديقك يحصل على تخفيض على عمولة أول طلب بكودك:</div>
+      <div class="quote" style="margin-top:8px"><div class="tot grad" id="refCode" style="letter-spacing:3px">—</div></div>
+      <div class="row" style="margin-top:8px"><button id="refCopy" class="sec sm" style="margin:0">نسخ الرابط</button></div>
+      <h2 style="margin-top:20px">الحساب</h2>
+      <button id="pushBtn" class="sec sm hide" style="margin:0 0 8px">🔔 فعّل الإشعارات</button><div id="pushMsg"></div>
       <div class="muted" id="who"></div>
       <button id="delAcc" class="sec sm" style="margin-top:10px">🗑️ حذف حسابي</button>
     </div>
@@ -95,17 +106,17 @@
 
   <!-- ===== تبويب: العروض ===== -->
   <section id="t_deals" class="hide">
-    <div class="card"><h2>🔥 مواعيد التخفيضات العالمية</h2><div id="sales"></div>
+    <div class="card"><h2>مواعيد التخفيضات العالمية</h2><div id="sales"></div>
       <div class="muted" style="margin-top:8px">التواريخ تقريبية، تأكد من المتجر.</div></div>
-    <div class="card"><h2>🏆 الأكثر طلباً</h2><div id="top"><div class="muted">...</div></div></div>
-    <div class="card"><h2>🏪 تصفح المتاجر</h2><div id="stores" class="grid2"></div>
+    <div class="card"><h2>الأكثر طلباً</h2><div id="top"><div class="muted">...</div></div></div>
+    <div class="card"><h2>تصفح المتاجر</h2><div id="stores" class="grid2"></div>
       <div class="muted" style="margin-top:8px">لقيت منتج؟ انسخ اللينك وارجع لتبويب "اطلب".</div></div>
   </section>
 
   <!-- ===== تبويب: الآراء ===== -->
   <section id="t_reviews" class="hide">
-    <div class="card"><h2>⭐ آراء الزبائن</h2><div id="revSum" class="muted"></div><div id="revs"></div></div>
-    <div class="card"><h2>❓ أسئلة شائعة</h2>
+    <div class="card"><h2>آراء الزبائن</h2><div id="revSum" class="muted"></div><div id="revs"></div></div>
+    <div class="card"><h2>أسئلة شائعة</h2>
       <details><summary><b>كيفاش نطلب؟</b></summary><div class="body" style="padding:10px 0">سجّل الدخول، حط لينك المنتج، عبّي معلومات التوصيل، وأكد الطلب. يظهرلك المبلغ بالدينار.</div></details>
       <details><summary><b>كيفاش ندفع؟</b></summary><div class="body" style="padding:10px 0">بالدينار عبر الطريقة المذكورة بعد تأكيد الطلب، وتحط رقم الوصل في "طلباتي".</div></details>
       <details><summary><b>واش المبلغ يتبدل؟</b></summary><div class="body" style="padding:10px 0">المبلغ يتحسب بسعر الصرف والعمولة وقت الطلب. إذا تبدل سعر المنتج عند المتجر قبل الشراء نكلموك في الدردشة.</div></details>
@@ -120,17 +131,17 @@
 
 <a id="fab" class="fab hide" target="_blank" rel="noopener noreferrer">💬</a>
 <nav class="nav">
-  <button data-nav="new" class="on"><i>🛒</i>اطلب</button>
-  <button data-nav="orders"><i>📦</i>طلباتي</button>
-  <button data-nav="deals"><i>🔥</i>العروض</button>
-  <button data-nav="reviews"><i>⭐</i>الآراء</button>
+  <button data-nav="new" class="on"><svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/></svg>اطلب</button>
+  <button data-nav="orders"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>طلباتي</button>
+  <button data-nav="deals"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></svg>العروض</button>
+  <button data-nav="reviews"><svg viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.2 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>الآراء</button>
 </nav>
 
 <script type="module">
-import { firebaseConfig, DEFAULTS, calc, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { firebaseConfig, DEFAULTS, VAPID_KEY, calc, genRef, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, onSnapshot, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 const $ = id => document.getElementById(id);
@@ -140,7 +151,7 @@ const auth = getAuth(app), db = getFirestore(app), fns = getFunctions(app);
 
 let settings = { ...DEFAULTS };
 let user = null, unsubOrders = null, unsubMine = null, registering = false, image = "";
-let myOrders = [], myReviewed = new Set();
+let myOrders = [], myReviewed = new Set(), disc = null;
 const rates = {};
 
 const authErrors = {
@@ -206,12 +217,40 @@ async function loadSettings() {
 function updateQuote() {
   const p = parseFloat($("price").value), q = parseInt($("qty").value) || 1, box = $("quote");
   if (!(p > 0)) { box.classList.add("hide"); return; }
-  const c = calc(p, q, settings);
+  const c = calc(p, q, settings, disc);
   box.classList.remove("hide");
-  box.innerHTML = `المنتج: ${c.itemsDzd} دج · الشحن: ${c.shipDzd} دج · العمولة: ${c.commission} دج<div class="tot grad">${c.total} دج</div>`;
+  box.innerHTML = `المنتج: ${c.itemsDzd} دج · الشحن: ${c.shipDzd} دج · العمولة: ${c.commission} دج${c.discount ? ` · <b>تخفيض: -${c.discount} دج</b>` : ""}<div class="tot grad">${c.total} دج</div>`;
 }
 ["price", "qty"].forEach(id => $(id).addEventListener("input", updateQuote));
 $("link").addEventListener("input", () => { const s = storeOf($("link").value.trim()); $("storeTag").textContent = s ? "🏪 " + s : ""; });
+
+// ===== كود التخفيض / الإحالة =====
+async function applyCoupon() {
+  const code = $("coupon").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  $("coupon").value = code; disc = null; msg($("couponMsg"), "");
+  if (!code) return updateQuote();
+  let err = "";
+  try {
+    const c = await getDoc(doc(db, "coupons", code));
+    if (c.exists()) {
+      const d = c.data();
+      if (d.active === false) err = "هذا الكود غير مفعّل";
+      else if (d.expires && new Date(d.expires + "T23:59:59") < new Date()) err = "انتهت صلاحية الكود";
+      else if (d.maxUses && (d.uses || 0) >= d.maxUses) err = "انتهى عدد استعمالات الكود";
+      else disc = { kind: "coupon", code, type: d.type === "pct" ? "pct" : "fixed", value: Number(d.value) || 0 };
+    } else {
+      const r = await getDoc(doc(db, "refcodes", code));
+      if (!r.exists()) err = "الكود غير صحيح";
+      else if (r.data().uid === user.uid) err = "ما تقدرش تستعمل كودك الخاص";
+      else if (myOrders.length) err = "كود الإحالة للزبائن الجدد (أول طلب) فقط";
+      else disc = { kind: "ref", code, type: "fixed", value: Number(settings.refDiscountDzd) || 0, refOwner: r.data().uid };
+    }
+  } catch (e) { err = "تعذر التحقق من الكود"; }
+  if (err) msg($("couponMsg"), err); else msg($("couponMsg"), "تم تطبيق الكود ✓", true);
+  updateQuote();
+}
+$("couponBtn").onclick = applyCoupon;
+$("coupon").addEventListener("input", () => { disc = null; msg($("couponMsg"), ""); updateQuote(); });
 
 // ===== جلب بيانات المنتج =====
 $("fetchBtn").onclick = async () => {
@@ -247,18 +286,20 @@ $("submit").onclick = async () => {
   if (daira.length < 2) return msg(em, "حط الدائرة");
   if (!/^\d{5}$/.test(postal)) return msg(em, "الرمز البريدي لازم 5 أرقام");
   if (address.length < 6) return msg(em, "كمّل العنوان");
-  const c = calc(price, qty, settings);
+  if ($("coupon").value.trim() && !disc) await applyCoupon();
+  const c = calc(price, qty, settings, disc);
   $("submit").disabled = true;
   try {
     await addDoc(collection(db, "orders"), {
       uid: user.uid, email: user.email, link, store: storeOf(link), title: $("title").value.trim(), image, priceUsd: price, qty,
       notes: $("notes").value.trim(), name, phone, wilaya, daira, postalCode: postal, address,
-      itemsDzd: c.itemsDzd, shipDzd: c.shipDzd, commission: c.commission, totalDzd: c.total,
+      itemsDzd: c.itemsDzd, shipDzd: c.shipDzd, commission: c.commission, discountDzd: c.discount, totalDzd: c.total,
+      coupon: disc ? disc.code : "", couponKind: disc ? disc.kind : "", refOwner: disc && disc.refOwner ? disc.refOwner : "",
       rate: settings.rate, status: "new", paymentRef: "", tracking: "", adminNote: "", createdAt: serverTimestamp()
     });
     msg(em, `تسجل الطلب ✅ المبلغ: ${c.total} دج. ${settings.payInfo} ثم حط رقم الوصل في "طلباتي".`, true);
     ["link", "title", "price", "notes"].forEach(id => $(id).value = "");
-    $("qty").value = 1; image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
+    $("qty").value = 1; $("coupon").value = ""; disc = null; msg($("couponMsg"), ""); image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
   } catch (e) { msg(em, "ما تسجلش الطلب، عاود حاول"); }
   $("submit").disabled = false;
 };
@@ -270,11 +311,12 @@ function renderOrders() {
     const img = httpsOnly(o.image);
     const reply = o.lastMsgFrom === "admin" || o.lastMsgFrom === "system";
     const canRate = o.status === "delivered" && !myReviewed.has(o.id);
+    const due = o.finalDzd ?? o.totalDzd, confirmed = o.finalDzd != null;
     return `<div class="card">
       <div class="ord">
         ${img ? `<img src="${esc(img)}" alt="" referrerpolicy="no-referrer">` : '<div class="ph">📦</div>'}
         <div class="grow"><b>${esc(o.title || "منتج")}</b>
-          <div class="muted">${o.store ? esc(o.store) + " · " : ""}الكمية ${esc(o.qty)} · ${esc(o.totalDzd)} دج</div></div>
+          <div class="muted">${o.store ? esc(o.store) + " · " : ""}الكمية ${esc(o.qty)} · ${esc(due)} دج ${confirmed ? "✅ مؤكد" : ""}</div></div>
         <span class="badge b-${esc(o.status)}">${esc(STATUS[o.status] || o.status)}</span>
       </div>
       ${o.tracking ? `<div class="kv"><span>رقم التتبع:</span> <b>${esc(o.tracking)}</b></div>` : ""}
@@ -352,6 +394,46 @@ onSnapshot(query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(
     <span class="muted"> ${esc(timeFmt(r.createdAt))}</span>${r.text ? `<div>${esc(r.text)}</div>` : ""}</div>`).join("");
 }, () => { $("revSum").textContent = ""; });
 
+// ===== كود الإحالة =====
+async function ensureRef() {
+  try {
+    const uref = doc(db, "users", user.uid);
+    const s = await getDoc(uref);
+    let code = s.exists() ? s.data().refCode : "";
+    for (let i = 0; i < 5 && !code; i++) {
+      const c = genRef();
+      try { await setDoc(doc(db, "refcodes", c), { uid: user.uid, createdAt: serverTimestamp() }); code = c; } catch (e) {}
+    }
+    if (code && !(s.exists() && s.data().refCode)) await setDoc(uref, { refCode: code, updatedAt: serverTimestamp() }, { merge: true });
+    $("refCode").textContent = code || "—";
+  } catch (e) {}
+}
+$("refCopy").onclick = async () => {
+  const code = $("refCode").textContent; if (!code || code === "—") return;
+  const link = location.origin + location.pathname + "?ref=" + code;
+  try { await navigator.clipboard.writeText(link); $("refCopy").textContent = "تم النسخ ✓"; } catch (e) { prompt("انسخ الرابط:", link); }
+};
+
+// ===== الإشعارات =====
+function pushReady() {
+  return !!VAPID_KEY && "Notification" in window && "serviceWorker" in navigator && Notification.permission !== "granted";
+}
+$("pushBtn").onclick = async () => {
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") return msg($("pushMsg"), "الإشعارات محجوبة، فعّلها من إعدادات المتصفح");
+    const { getMessaging, getToken } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js");
+    const reg = await navigator.serviceWorker.ready;
+    const token = await getToken(getMessaging(app), { vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+    await setDoc(doc(db, "users", user.uid), { tokens: arrayUnion(token), updatedAt: serverTimestamp() }, { merge: true });
+    $("pushBtn").classList.add("hide"); msg($("pushMsg"), "تم تفعيل الإشعارات ✓", true);
+  } catch (e) { msg($("pushMsg"), "تعذر تفعيل الإشعارات على هذا الجهاز"); }
+};
+
+// رابط الدعوة ?ref=CODE
+const refParam = new URLSearchParams(location.search).get("ref");
+if (refParam) $("coupon").value = refParam.toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+
 renderSales(); renderTop();
 
 // ===== حالة الدخول =====
@@ -367,10 +449,13 @@ onAuthStateChanged(auth, async u => {
   await loadSettings();
   if (!u) return;
   $("who").textContent = u.email || "";
+  $("pushBtn").classList.toggle("hide", !pushReady());
+  ensureRef();
   if (u.displayName && !$("name").value) $("name").value = u.displayName;
   unsubOrders = onSnapshot(query(collection(db, "orders"), where("uid", "==", u.uid)),
     s => { myOrders = s.docs.map(d => ({ id: d.id, ...d.data() })); renderOrders(); },
     () => { $("orders").innerHTML = '<div class="msg err">تعذر تحميل الطلبات</div>'; });
+  if ($("coupon").value) setTimeout(applyCoupon, 1500); // رابط دعوة: نطبق الكود بعد تحميل الطلبات
   unsubMine = onSnapshot(query(collection(db, "reviews"), where("uid", "==", u.uid)),
     s => { myReviewed = new Set(s.docs.map(d => d.id)); renderOrders(); }, () => {});
 });

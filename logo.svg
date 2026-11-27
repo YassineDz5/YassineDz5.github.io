@@ -2,5 +2,5 @@
 <polygon points="8,4 27,19 37,19 56,4 61,33 32,61 3,33" fill="#ff7a1a"/>
 <polygon points="12,11 22,19 13,24" fill="#c2410c"/><polygon points="52,11 42,19 51,24" fill="#c2410c"/>
 <polygon points="3,33 21,38 32,61" fill="#fff4e6"/><polygon points="61,33 43,38 32,61" fill="#fff4e6"/>
-<ellipse cx="23" cy="31" rx="3" ry="4" fill="#1a0e00"/><ellipse cx="41" cy="31" rx="3" ry="4" fill="#1a0e00"/>
-<circle cx="32" cy="57" r="3.2" fill="#1a0e00"/></svg>
+<ellipse cx="23" cy="31" rx="3" ry="4" fill="#211c17"/><ellipse cx="41" cy="31" rx="3" ry="4" fill="#211c17"/>
+<circle cx="32" cy="57" r="3.2" fill="#211c17"/></svg>
