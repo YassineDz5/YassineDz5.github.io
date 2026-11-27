@@ -40,10 +40,35 @@
         <label>كلمة السر</label><input id="pass" type="password" autocomplete="current-password">
         <div id="authMsg"></div>
         <button id="authBtn" class="full">دخول</button>
+        <button id="forgot" class="linkbtn">نسيت كلمة السر؟</button>
         <button id="authToggle" class="sec full">ما عندكش حساب؟ سجّل</button>
         <div class="or">أو</div>
         <button id="gBtn" class="sec full" style="margin-top:8px">🔵 الدخول بحساب Google</button>
       </div>
+    </div>
+
+    <div id="verifyBox" class="card hide">
+      <h2>أكّد إيميلك</h2>
+      <div class="muted">أرسلنا لك رابط تأكيد. افتحه (شوف السبام أيضاً) ثم اضغط «تأكدت».</div>
+      <div id="vMsg"></div>
+      <div class="row" style="margin-top:6px"><button id="vDone" style="margin-top:8px">تأكدت</button><button id="vSend" class="sec" style="margin-top:8px">إعادة إرسال الرابط</button></div>
+    </div>
+
+    <div id="profileBox" class="card hide">
+      <h2>أكمل ملفك (مرة وحدة)</h2>
+      <div class="muted">نطلب هذه المعلومات لحماية الخدمة من الاحتيال. الخدمة للبالغين (18 سنة فما فوق).</div>
+      <div class="row">
+        <div><label>الاسم</label><input id="pf_first" maxlength="30" autocomplete="given-name"></div>
+        <div><label>اللقب</label><input id="pf_last" maxlength="30" autocomplete="family-name"></div>
+      </div>
+      <label>العمر</label><input id="pf_age" type="number" inputmode="numeric" min="18" max="90">
+      <label>صورة البطاقة الوطنية (الوجه الأمامي)</label>
+      <input id="pf_id" type="file" accept="image/*">
+      <img id="pf_prev" class="idprev hide" alt="">
+      <div class="muted" style="margin-top:6px">تُضغط الصورة تلقائياً، ولا يراها إلا أنت والإدارة، وتُحذف مع حسابك.</div>
+      <label class="chk"><input id="pf_ok" type="checkbox"><span>أوافق على <a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a> وأؤكد أن المعلومات صحيحة.</span></label>
+      <div id="pfMsg"></div>
+      <button id="pfSave" class="full">حفظ ومتابعة</button>
     </div>
 
     <div id="orderBox" class="hide">
@@ -138,13 +163,14 @@
 </nav>
 
 <script type="module">
-import { firebaseConfig, DEFAULTS, VAPID_KEY, calc, genRef, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { toast, hookErrors, firebaseConfig, DEFAULTS, VAPID_KEY, calc, genRef, STATUS, WILAYAS, STORES, storeOf, nextSales, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, collection, query, where, orderBy, limit, onSnapshot, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, GoogleAuthProvider, signInWithPopup, deleteUser, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, onSnapshot, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 const $ = id => document.getElementById(id);
+hookErrors();
 $("logo").innerHTML = LOGO(44);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app), db = getFirestore(app), fns = getFunctions(app);
@@ -162,9 +188,10 @@ const authErrors = {
   "auth/network-request-failed": "مشكل في الانترنت",
   "auth/popup-blocked": "المتصفح بلوك النافذة، سمح بالنوافذ المنبثقة",
   "auth/unauthorized-domain": "هذا الدومين غير مضاف في Firebase (Authorized domains)",
-  "auth/operation-not-allowed": "دخول Google غير مفعّل في Firebase"
+  "auth/operation-not-allowed": "دخول Google غير مفعّل في Firebase",
+  "auth/too-many-requests": "محاولات كثيرة، استنى شوية وعاود"
 };
-function msg(el, text, ok) { el.innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}">${esc(text)}</div>` : ""; }
+function msg(el, text, ok) { el.innerHTML = text ? `<div class="msg ${ok ? "ok" : "err"}" style="font-weight:600;font-size:15px;border:1px solid currentColor">${esc(text)}</div>` : ""; if (text && el.scrollIntoView) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
 
 // ===== التبويبات =====
 function show(tab) {
@@ -186,8 +213,10 @@ $("authToggle").onclick = () => {
 $("authBtn").onclick = async () => {
   msg($("authMsg"), "");
   try {
-    const f = registering ? createUserWithEmailAndPassword : signInWithEmailAndPassword;
-    await f(auth, $("email").value.trim(), $("pass").value);
+    if (registering) {
+      const c = await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      try { await sendEmailVerification(c.user); } catch (e) {}
+    } else await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
   } catch (e) { msg($("authMsg"), authErrors[e.code] || "صار مشكل، عاود حاول"); }
 };
 $("gBtn").onclick = async () => {
@@ -195,10 +224,86 @@ $("gBtn").onclick = async () => {
   try { await signInWithPopup(auth, new GoogleAuthProvider()); }
   catch (e) { if (!["auth/popup-closed-by-user", "auth/cancelled-popup-request"].includes(e.code)) msg($("authMsg"), authErrors[e.code] || "تعذر الدخول بـ Google"); }
 };
+$("forgot").onclick = async () => {
+  const em = $("email").value.trim();
+  if (!em) return msg($("authMsg"), "اكتب إيميلك في خانة الإيميل أولاً");
+  try { await sendPasswordResetEmail(auth, em); }
+  catch (e) { if (["auth/invalid-email", "auth/network-request-failed", "auth/too-many-requests"].includes(e.code)) return msg($("authMsg"), authErrors[e.code]); }
+  msg($("authMsg"), "إذا كان الإيميل مسجلاً، وصلك رابط لإعادة تعيين كلمة السر (شوف السبام أيضاً).", true);
+};
+$("vSend").onclick = async () => {
+  try { await sendEmailVerification(auth.currentUser); msg($("vMsg"), "تم إرسال الرابط", true); }
+  catch (e) { msg($("vMsg"), authErrors[e.code] || "تعذر الإرسال، عاود بعد شوية"); }
+};
+$("vDone").onclick = async () => {
+  try { await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); } catch (e) {}
+  if (!auth.currentUser.emailVerified) return msg($("vMsg"), "الإيميل ما زال غير مؤكد");
+  msg($("vMsg"), ""); refreshState();
+};
+
+// ===== الملف الشخصي + البطاقة الوطنية =====
+let profile = {}, hasKyc = false;
+async function refreshState() {
+  const u = auth.currentUser; if (!u) return;
+  $("verifyBox").classList.toggle("hide", !!u.emailVerified);
+  if (u.emailVerified) {
+    try {
+      const [p, k] = await Promise.all([getDoc(doc(db, "users", u.uid)), getDoc(doc(db, "kyc", u.uid))]);
+      profile = p.exists() ? p.data() : {}; hasKyc = k.exists();
+    } catch (e) { toast("تعذر تحميل ملفك: " + (e.code || e.message)); profile = {}; hasKyc = false; }
+  }
+  const ready = !!u.emailVerified && !!profile.profileDone && hasKyc;
+  $("profileBox").classList.toggle("hide", !(u.emailVerified && !ready));
+  $("orderBox").classList.toggle("hide", !ready);
+  if (ready) {
+    const set = (id, v) => { if (v && !$(id).value) $(id).value = v; };
+    set("name", [profile.firstName, profile.lastName].filter(Boolean).join(" "));
+    set("phone", profile.phone); set("daira", profile.daira); set("postal", profile.postal); set("address", profile.address);
+    if (profile.wilaya && !$("wilaya").value) $("wilaya").value = profile.wilaya;
+  }
+}
+async function compressImage(file) {
+  const bmp = await createImageBitmap(file);
+  let max = 1100, q = 0.7;
+  for (let i = 0; i < 6; i++) {
+    const r = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * r); c.height = Math.round(bmp.height * r);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    const url = c.toDataURL("image/jpeg", q);
+    if (url.length <= 450000) return url;
+    max *= 0.8; q -= 0.08;
+  }
+  throw new Error("الصورة كبيرة بزاف");
+}
+$("pf_id").onchange = () => {
+  const f = $("pf_id").files[0], p = $("pf_prev");
+  if (!f) return p.classList.add("hide");
+  p.src = URL.createObjectURL(f); p.classList.remove("hide");
+};
+$("pfSave").onclick = async () => {
+  const first = $("pf_first").value.trim(), last = $("pf_last").value.trim(), age = parseInt($("pf_age").value), f = $("pf_id").files[0], em = $("pfMsg");
+  if (first.length < 2 || last.length < 2) return msg(em, "اكتب الاسم واللقب");
+  if (!(age >= 18 && age <= 90)) return msg(em, "الخدمة لمن عمره 18 سنة فما فوق");
+  if (!f || !/^image\//.test(f.type)) return msg(em, "اختر صورة البطاقة الوطنية");
+  if (!$("pf_ok").checked) return msg(em, "لازم توافق على سياسة الخصوصية");
+  $("pfSave").disabled = true; msg(em, "جاري الحفظ...", true);
+  try {
+    let img;
+    try { img = await compressImage(f); } catch (e) { msg(em, "تعذر قراءة الصورة، جرب صورة JPG أو PNG"); $("pfSave").disabled = false; return; }
+    await setDoc(doc(db, "kyc", auth.currentUser.uid), { img, createdAt: serverTimestamp() });
+    await setDoc(doc(db, "users", auth.currentUser.uid), { firstName: first, lastName: last, age, profileDone: true, agreedAt: serverTimestamp(), updatedAt: serverTimestamp() }, { merge: true });
+    msg(em, ""); toast("تم حفظ ملفك ✓", true); await refreshState(); scrollTo(0, 0);
+  } catch (e) { console.error(e); msg(em, "ما تسجلش الملف (" + (e.code || e.message) + ")"); toast("تعذر حفظ الملف: " + (e.code || e.message)); }
+  $("pfSave").disabled = false;
+};
 $("logout").onclick = () => signOut(auth);
 $("delAcc").onclick = async () => {
   if (!confirm("متأكد تحب تحذف حسابك؟ ما تقدرش ترجعو.")) return;
-  try { await deleteUser(auth.currentUser); }
+  try {
+    const id = auth.currentUser.uid;
+    await deleteDoc(doc(db, "kyc", id)).catch(() => {}); await deleteDoc(doc(db, "users", id)).catch(() => {});
+    await deleteUser(auth.currentUser);
+  }
   catch (e) { alert(e.code === "auth/requires-recent-login" ? "لأسباب أمنية: اخرج وادخل من جديد، ثم عاود حذف الحساب." : "تعذر حذف الحساب"); }
 };
 if (window.__bip) $("installBtn").classList.remove("hide");
@@ -273,10 +378,12 @@ $("fetchBtn").onclick = async () => {
 
 // ===== تأكيد الطلب =====
 $("submit").onclick = async () => {
+  msg($("orderMsg"), "جاري التحقق...", true);
   const link = $("link").value.trim(), price = parseFloat($("price").value), qty = parseInt($("qty").value);
   const name = $("name").value.trim(), phone = $("phone").value.trim().replace(/\s/g, "");
   const wilaya = $("wilaya").value, daira = $("daira").value.trim(), postal = $("postal").value.trim(), address = $("address").value.trim();
   const em = $("orderMsg");
+  if (!auth.currentUser?.emailVerified || !profile.profileDone) return msg(em, "أكّد إيميلك وأكمل ملفك أولاً");
   if (!/^https?:\/\//i.test(link)) return msg(em, "حط لينك المنتج صحيح");
   if (!(price > 0)) return msg(em, "حط سعر المنتج بالدولار");
   if (!(qty >= 1 && qty <= 20)) return msg(em, "الكمية بين 1 و 20");
@@ -297,10 +404,13 @@ $("submit").onclick = async () => {
       coupon: disc ? disc.code : "", couponKind: disc ? disc.kind : "", refOwner: disc && disc.refOwner ? disc.refOwner : "",
       rate: settings.rate, status: "new", paymentRef: "", tracking: "", adminNote: "", createdAt: serverTimestamp()
     });
-    msg(em, `تسجل الطلب ✅ المبلغ: ${c.total} دج. ${settings.payInfo} ثم حط رقم الوصل في "طلباتي".`, true);
+    setDoc(doc(db, "users", user.uid), { phone, wilaya, daira, postal, address, updatedAt: serverTimestamp() }, { merge: true }).then(() => { Object.assign(profile, { phone, wilaya, daira, postal, address }); }).catch(() => {});
+    msg(em, "");
+    toast(`تسجل الطلب ✅ المبلغ: ${c.total} دج. ${settings.payInfo || ""} ثم حط رقم الوصل في "طلباتي".`, true);
+    show("orders");
     ["link", "title", "price", "notes"].forEach(id => $(id).value = "");
     $("qty").value = 1; $("coupon").value = ""; disc = null; msg($("couponMsg"), ""); image = ""; $("preview").classList.add("hide"); $("fetchMsg").innerHTML = ""; $("storeTag").textContent = ""; updateQuote();
-  } catch (e) { msg(em, "ما تسجلش الطلب، عاود حاول"); }
+  } catch (e) { console.error("order error", e); toast("تعذر تسجيل الطلب: " + (e.code || e.message)); msg(em, "ما تسجلش الطلب (" + (e.code || e.message || "خطأ") + ")"); }
   $("submit").disabled = false;
 };
 
@@ -441,7 +551,7 @@ onAuthStateChanged(auth, async u => {
   user = u;
   [unsubOrders, unsubMine].forEach(f => f && f()); unsubOrders = unsubMine = null;
   $("authBox").classList.toggle("hide", !!u);
-  $("orderBox").classList.toggle("hide", !u);
+  if (!u) { $("orderBox").classList.add("hide"); $("profileBox").classList.add("hide"); $("verifyBox").classList.add("hide"); profile = {}; hasKyc = false; }
   $("ordersLogin").classList.toggle("hide", !!u);
   $("accCard").classList.toggle("hide", !u);
   $("logout").classList.toggle("hide", !u);
@@ -451,10 +561,11 @@ onAuthStateChanged(auth, async u => {
   $("who").textContent = u.email || "";
   $("pushBtn").classList.toggle("hide", !pushReady());
   ensureRef();
+  await refreshState();
   if (u.displayName && !$("name").value) $("name").value = u.displayName;
   unsubOrders = onSnapshot(query(collection(db, "orders"), where("uid", "==", u.uid)),
     s => { myOrders = s.docs.map(d => ({ id: d.id, ...d.data() })); renderOrders(); },
-    () => { $("orders").innerHTML = '<div class="msg err">تعذر تحميل الطلبات</div>'; });
+    err => { $("orders").innerHTML = '<div class="msg err">تعذر تحميل الطلبات</div>'; toast("تعذر تحميل الطلبات: " + err.code); });
   if ($("coupon").value) setTimeout(applyCoupon, 1500); // رابط دعوة: نطبق الكود بعد تحميل الطلبات
   unsubMine = onSnapshot(query(collection(db, "reviews"), where("uid", "==", u.uid)),
     s => { myReviewed = new Set(s.docs.map(d => d.id)); renderOrders(); }, () => {});

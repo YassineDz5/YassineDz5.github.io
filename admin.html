@@ -24,6 +24,7 @@
     <label>كلمة السر</label><input id="pass" type="password">
     <div id="authMsg"></div>
     <button id="authBtn" class="full">دخول</button>
+    <button id="forgot" class="linkbtn">نسيت كلمة السر؟</button>
     <div class="or">أو</div>
     <button id="gBtn" class="sec full" style="margin-top:8px">🔵 الدخول بحساب Google</button>
   </div>
@@ -109,12 +110,13 @@
 </div>
 
 <script type="module">
-import { firebaseConfig, ADMIN_EMAIL, DEFAULTS, calc, STATUS, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
+import { toast, hookErrors, firebaseConfig, ADMIN_EMAIL, DEFAULTS, calc, STATUS, esc, safeUrl, httpsOnly, timeFmt, LOGO } from "./common.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, orderBy, onSnapshot, deleteField, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
+hookErrors();
 $("logo").innerHTML = LOGO(44);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app), db = getFirestore(app);
@@ -127,6 +129,12 @@ $("authBtn").onclick = async () => {
   $("authMsg").innerHTML = "";
   try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value); }
   catch (e) { $("authMsg").innerHTML = '<div class="msg err">بيانات غالطة</div>'; }
+};
+$("forgot").onclick = async () => {
+  const em = $("email").value.trim();
+  if (!em) { $("authMsg").innerHTML = '<div class="msg err">اكتب الإيميل أولاً</div>'; return; }
+  try { await sendPasswordResetEmail(auth, em); } catch (e) {}
+  $("authMsg").innerHTML = '<div class="msg ok">إذا كان الإيميل مسجلاً وصلك رابط الاستعادة</div>';
 };
 $("gBtn").onclick = async () => {
   $("authMsg").innerHTML = "";
@@ -196,6 +204,7 @@ function render() {
         ${o.notes ? `<div class="kv"><span>ملاحظات:</span> ${esc(o.notes)}</div>` : ""}
         <div class="kv">👤 ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
         <div class="kv">📍 ${esc(o.wilaya)} / ${esc(o.daira || "—")} / ${esc(o.postalCode || "—")}<br>${esc(o.address)}</div>
+        <div class="kv" data-kycbox="1">${kycHtml(o)}</div>
         <div class="kv">🧾 وصل الدفع: <b>${esc(o.paymentRef || "—")}</b></div>
         <label>الحالة</label>
         <select data-f="status" data-id="${esc(o.id)}">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === o.status ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>
@@ -215,6 +224,18 @@ function render() {
   }).join("") || '<div class="muted">لا توجد طلبات</div>';
 }
 
+const kycCache = {};
+const kycHtml = o => kycCache[o.uid] || `<button class="sec sm" data-kyc="${esc(o.uid)}" style="margin:0">🪪 بيانات الزبون والبطاقة</button>`;
+async function loadKyc(uid, btn) {
+  try {
+    const [u, k] = await Promise.all([getDoc(doc(db, "users", uid)), getDoc(doc(db, "kyc", uid))]);
+    const p = u.exists() ? u.data() : {};
+    const img = k.exists() && typeof k.data().img === "string" && k.data().img.startsWith("data:image/jpeg;base64,") ? k.data().img : "";
+    kycCache[uid] = `<div class="kv">🪪 ${esc([p.firstName, p.lastName].filter(Boolean).join(" ") || "—")} · العمر: <b>${esc(p.age ?? "—")}</b></div>` +
+      (img ? `<a href="${img}" target="_blank" rel="noopener"><img src="${img}" alt="" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--line)"></a>` : '<div class="muted">لا توجد صورة بطاقة</div>');
+    btn.parentElement.innerHTML = kycCache[uid];
+  } catch (e) { toast("تعذر تحميل بيانات الزبون: " + (e.code || e.message)); }
+}
 const refName = uid => { const o = all.find(x => x.uid === uid); return o ? o.name : "—"; };
 
 // ===== الكوبونات =====
@@ -318,6 +339,7 @@ $("revs").addEventListener("click", async e => {
 $("chips").addEventListener("click", e => { if (e.target.dataset?.chip === undefined) return; filter = e.target.dataset.chip; render(); });
 $("orders").addEventListener("toggle", e => { const id = e.target.dataset?.id; if (!id) return; e.target.open ? openIds.add(id) : openIds.delete(id); }, true);
 $("orders").addEventListener("click", async e => {
+  if (e.target.dataset?.kyc) return loadKyc(e.target.dataset.kyc, e.target);
   const id = e.target.dataset?.save;
   if (!id) return;
   const get = f => [...document.querySelectorAll("[data-id]")].find(x => x.dataset.id === id && x.dataset.f === f).value;
@@ -325,7 +347,7 @@ $("orders").addEventListener("click", async e => {
     const num = f => { const v = get(f).trim(); return v === "" || !(Number(v) >= 0) ? deleteField() : Math.round(Number(v)); };
     await updateDoc(doc(db, "orders", id), { status: get("status"), tracking: get("tracking").trim(), adminNote: get("adminNote").trim(), finalDzd: num("finalDzd"), costDzd: num("costDzd"), updatedAt: serverTimestamp() });
     e.target.textContent = "تم ✓";
-  } catch (err) { e.target.textContent = "خطأ"; }
+  } catch (err) { e.target.textContent = "خطأ"; toast("تعذر الحفظ: " + (err.code || err.message)); }
 });
 
 onAuthStateChanged(auth, async u => {
@@ -342,11 +364,11 @@ onAuthStateChanged(auth, async u => {
     all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if (!$("orders").contains(document.activeElement)) render(); // ما نمسحوش اللي راك تكتب فيه
     if (!$("viewP").classList.contains("hide")) renderReport();
-  }));
-  unsubs.push(onSnapshot(collection(db, "coupons"), snap => { coupons = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderCoupons(); }));
+  }, err => toast("تعذر تحميل الطلبات: " + (err.code || err.message))));
+  unsubs.push(onSnapshot(collection(db, "coupons"), snap => { coupons = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderCoupons(); }, err => toast("تعذر تحميل الكوبونات: " + (err.code || err.message))));
   unsubs.push(onSnapshot(query(collection(db, "reviews"), orderBy("createdAt", "desc")), snap => {
     reviews = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderReviews();
-  }));
+  }, err => toast("تعذر تحميل الآراء: " + (err.code || err.message))));
 });
 </script>
 <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js")})</script>

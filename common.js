@@ -111,3 +111,24 @@ export function genRef() {
   const a = new Uint32Array(6); crypto.getRandomValues(a);
   return [...a].map(n => REF_CHARS[n % REF_CHARS.length]).join("");
 }
+
+// شريط أخطاء/رسائل سفلي (يظهر في كل الصفحات)
+let _toastT;
+export function toast(text, ok) {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div"); el.id = "toast"; el.setAttribute("role", "alert");
+    el.onclick = () => el.classList.remove("show");
+    document.body.appendChild(el);
+  }
+  el.textContent = text; el.className = "show " + (ok ? "ok" : "bad");
+  clearTimeout(_toastT); _toastT = setTimeout(() => el.classList.remove("show"), ok ? 4000 : 9000);
+}
+export function hookErrors() {
+  const skip = /ResizeObserver|Script error/i;
+  addEventListener("error", e => { if (e.message && !skip.test(e.message)) toast("خطأ: " + e.message); });
+  addEventListener("unhandledrejection", e => {
+    const r = e.reason || {}; const m = r.code || r.message || String(r);
+    if (!skip.test(m)) toast("خطأ: " + m);
+  });
+}

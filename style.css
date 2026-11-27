@@ -69,3 +69,11 @@ details .body{padding:0 14px 14px;border-top:1px solid var(--line)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tag{display:inline-block;padding:2px 9px;border-radius:5px;font-size:11px;background:var(--card2);color:var(--mut)}
 .note{background:#fdf6e3;border:1px solid #eadba8;color:#6b5516;border-radius:8px;padding:10px 12px;font-size:13px;margin-top:10px}
+
+#toast{position:fixed;left:12px;right:12px;bottom:78px;max-width:600px;margin:0 auto;padding:12px 14px;border-radius:8px;font-size:14px;font-weight:600;z-index:50;display:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#toast.show{display:block}#toast.bad{background:#c53030;color:#fff}#toast.ok{background:#1f8a5b;color:#fff}
+.linkbtn{background:none;border:0;color:var(--or2);padding:6px 0;margin:6px 0 0;font-size:13px;font-weight:500;text-decoration:underline}
+.linkbtn:hover{background:none}
+.chk{display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;color:var(--mut)}
+.chk input{width:auto;margin-top:4px}
+.idprev{max-width:100%;max-height:170px;border-radius:8px;border:1px solid var(--line);margin-top:8px}
